@@ -1,0 +1,127 @@
+<!doctype html>
+<head>
+  <title>LMS Spike</title>
+  <script   src="https://code.jquery.com/jquery-3.2.1.min.js"   integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="   crossorigin="anonymous"></script>
+</head>
+<h1>SSO stuff</h1>
+For reference: test usernames:<br/>
+<p>john.mcglinchey@investopedia.com // GtA-was-wd4-BA3</p>
+<p>tsung // password</p>
+<script>
+$(document).ready(function() {
+  document.getElementById('login-url').onclick = function() {
+    location.href = '/login/' + document.getElementById('username').value;
+  };
+  document.getElementById('login-api-session').onclick = function() {
+    location.href = '/login/v1/' + document.getElementById('username').value;
+  };
+  document.getElementById('login-api').onclick = function() {
+    location.href = '/login/api/' + document.getElementById('username').value;
+  };
+  document.getElementById('logout-api').onclick = function() {
+    $.post('https://inv999abc.docebosaas.com/api/user/logout',
+	   data={'id_user': document.getElementById('username').value},
+           function(data) {
+             $(".debug").html(data);
+           });
+  };
+  document.getElementById('logout-api-v1').onclick = function() {
+    $.post('https://inv999abc.docebosaas.com/manage/v1/user/logout',
+           function(data) {
+             $(".debug").html(data);
+           });
+  };
+  document.getElementById('logout-api-session').onclick = function() {
+    location.href = '/logout/' + document.getElementById('username').value;
+  };
+  document.getElementById('create-user').onclick = function() {
+    location.href = '/user/create/' + document.getElementById('username').value;
+  };
+  document.getElementById('courses-enrolled').onclick = function() {
+    location.href = '/info/enrolled/' + document.getElementById('username').value;
+  };
+  document.getElementById('enroll-user').onclick = function() {
+    location.href = '/enroll/' + document.getElementById('username').value + "/" + document.getElementById('courseid').value;
+  };
+});
+</script>
+<div class='debug'></div>
+Username: <input type="text" id="username" value="tsung"/><br/><br/>
+Course ID: <input type="text" id="courseid" value="2"/><br/><br/>
+<input type="button" id="login-url" value="Login using URL method"/><br/>
+<ul>
+  <li>This doesn't seem to create a session properly, so going to some urls (like /) will prompt for login again.</li>
+</ul>
+<input type="button" id="login-api" value="Login using API"/><br/>
+<ul>
+  <li>This doesn't login at all.</li>
+</ul>
+<input type="button" id="login-api-session" value="Login using API and session iframe"/><br/>
+<ul>
+  <li>We can force redirect to external site to login.  Logout is a little difficult to find: Advanced Settings -> Users -> Redirect user on logout.  </li>
+  <li>If another user is already logged in, using API SSO login doesn't log in as the API user.</li>
+  <li>Logout using their api (/user/logout or /manage/v1/user/logout) doesn't seem to work</li>
+</ul>
+<input type="button" id="logout-api" value="Logout by posting to /api/user/logout on Docebo"/><br/>
+<ul>
+  <li>This sort of works but not consistently.  Going to /learn/dashboard user is still logged in</li>
+</ul>
+<input type="button" id="logout-api-v1" value="Logout by posting to /manage/v1/user/logout on Docebo"/><br/>
+<ul>
+  <li>Returnsn 401 Unauthorized</li>
+</ul>
+<input type="button" id="logout-api-session" value="Logout using session iframe"/><br/>
+<ul>
+  <li>This sort of works but not consistently.  Going to /learn/dashboard user is still logged in</li>
+</ul>
+<input type="button" id="create-user" value="Create user"/><br/>
+<input type="button" id="courses-enrolled" value="Enrolled courses"/><br/>
+<h1>Course stuff</h1>
+<a href='https://inv999abc.docebosaas.com/learn/course/1'>Sample lesson course page</a><br/>
+<ul>
+  <li>Seems to be bugged when using external SSO. It redirects to docebo\'s login page rather than the external login page.</li>
+</ul>
+<p>Drop user into cart or checkout from the course detail page - user clicks "Buy Now" and goes to the LMS platform's cart/checkout </p>
+<input type="button" id="enroll-user" value="Enroll user in course"/><br/>
+<ul>
+  <li>We can't externally add to a user's cart, or checkout for them.</li>
+</ul>
+<a href='https://inv999abc.docebosaas.com/learn/course/view/elearning/2/Paid%20course'>Paid lesson course page</a><br/>
+<p>Adding and maintaining course media</p>
+<ul>
+  <li>Custom HTML</li>
+  <li>Import from powerpoint</li>
+  <li>Surveys, tests</li>
+  <li>Upload videos, files</li>
+  <li>SCORM, AICC</li>
+</ul>
+<p>Other bugs and issues</p>
+<ul>
+  <li>Trying to search for a course gives: 0 results found for "" every time</li>
+</ul>
+<p>Maintain course price/markdowns - does this happen in the LMS or on our side? Course price should be able to be pulled into all the shopping pages (homepage, course detail page)</p>
+<a href='/courses'>List courses</a><br/>
+<ul>
+  <li>We can pull course prices from here.</li>
+  <li>The e-commerce API isn't very powerful.  We can't change the prices using the API or manipulate the cart.</li>
+</ul>
+<p>Docebo and Shopify</p>
+<ul>
+  <li>There is integration within Docebo for this.</li>
+  <li>Price change syncs both ways.  Updating from Docebo side requires us to bring the product down temporarily.</li>
+  <li>Title/Description change only syncs from Docebo->Shopify</li>
+  <li>In terms of hooking into another LMS, I don't see any way to do that with the current APIs</li>
+  <li>In terms of the checkout  flow, Docebo -> Shopify works fine, but we can't link back to Docebo.  We need Shopify Plus to change the contents of checkout.liquid which would let us do that.</li>
+</ul>
+<p>Third Party Integrations</p>
+<ul>
+  <li>Optimizely: we give them the optimizely tag.</li>
+  <li>Google Analytics: we just give them our GA tag and they choose what to track.</li>
+  <li>Sailthru: no integration.  They have their own notifications.
+    <ul>
+    <li>"User bought/enrolled a course"</li>
+    <li>"User has failed/passed a ILT course"</li>
+    <li>There doesn't seem to be a way to hook on "user completed a course", "user last accessed a course", or "user finished X amount of a course".</li>
+    </ul>
+  </li>
+</ul>
